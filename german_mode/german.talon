@@ -4,10 +4,10 @@ language: de_DE
 
 # idea: allow to directly chain commands
 # how about using 'ego' (as in jp 'eigo')?
-^(englisch | english | ego)$:
+^(englisch | english)$:
     mode.disable("user.german")
     mode.enable("command")
 
-^german$: skip()
+^german mode$: skip()
 
 <user.satz>: user.dictation_insert(satz)

@@ -6,8 +6,8 @@ This is a fork of earlier setups, adding some improvements.
 This version uses the german conformer model instead of vosk. This results in two major benefits: (1) You can add unknown words and (2) you no longer have to worry about misrecognitions with commands, since the conformer speech engine knows about the currently defined commands. Basically it now behaves like you are used to from the english speech models.
 
 ## Usage
-Say `german [mode]` to switch from command mode to German dictation mode and `english` / `ego` to switch back.
-Use `nimitz <german phrase>` for single german phrases, like you would use `say <english phrase>` (from russian "nemetz" for "german").
+Say `german mode` to switch from command mode to German dictation mode and `english` to switch back.
+Use `german <german phrase>` for single german phrases, like you would use `say <english phrase>`.
 
 Check out the _commands_ directory for all commands available in german mode.
 _german_mode/german.py_ contains a number of lists that might be of interest (names of special characters etc).
@@ -32,14 +32,14 @@ Also added more symbols I frequently used, for example `in Klammern` (` ()`), `S
 
 ### German mode / quick german phrases
 The original setup introduced a way to dictate a quick german phrase while in english mode without having to switch to german mode and back (like a german `say` command).
-This was originally just an improved version of the `german [mode]` command used to change modes (for example `german Hallo Welt` instead of `german <pause> Hallo Welt english <pause>`).
+This was originally just an improved version of the `german mode` command used to change modes (for example `german Hallo Welt` instead of `german <pause> Hallo Welt english <pause>`).
 Note that the implementation for this is somewhat of hack and behavior might change with updates in talon or the english speech model.
 
 Since I would sometimes switch into german mode when I did not want to or fail to remain in german mode (resulting in my german text getting interpreted as a bunch of english commands), I set up the quick german phrase and the german mode change to use separate commands (there is also the fact that my german accent made the 'r' in 'german' a bit harder to recognize when quickly chaining):
-* `german` switches to german mode and stays there.
-* `nimitz` (from russian "nemetz" for german) will interpret the following phrase as german and allow you to continue in english as before. This is the german equivalent of `say <english phrase>`.
+* `german mode` switches to german mode and stays there.
+* `german` will interpret the following phrase as german and allow you to continue in english as before. This is the german equivalent of `say <english phrase>`.
 
-Use `english`, or short `ego` (japanese "eigo" for english) to switch back.
+Use `english` to switch back.
 
 ### Quick access to configuration
 Similar to `customize ...` in the community command set, following commands allow quick access to important configuration files:

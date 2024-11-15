@@ -1,10 +1,10 @@
 language: en_US
 -
-^(german [mode] | deutsch)$:
+^(german mode | deutsch)$:
     mode.disable("command")
     mode.enable("user.german")
 
-^(english | ego | pego)$: skip()
+^english$: skip()
 
-^nimitz <phrase>$:
+^german <phrase>$:
     user.recognize_momentary_german(phrase)
