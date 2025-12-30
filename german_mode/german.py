@@ -13,6 +13,15 @@ mode: user.german
 language: de_DE
 """
 
+mod.setting("german_use_spacy",
+            type=int,
+            default=0,
+            desc="Use spaCy for grammar correction")
+
+mod.setting("german_python_spacy",
+            type=str,
+            default="/usr/bin/python",
+            desc="Python interpreter with the spaCy package installed")
 
 mod.setting("german_unicode",
             type=int,

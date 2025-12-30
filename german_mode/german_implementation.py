@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Set, List
+from typing import Set, List, Optional
 
-from talon import Context, actions
+from talon import Context, actions, settings
 from .external_transformer import ExternalTransformer
 
 ctx = Context()
@@ -86,8 +86,12 @@ def satzglied(m) -> str:
     else:
         return str(m)
 
-spacy_path = here / ".external" / "spaCyFix.py"
-spaCyFix = ExternalTransformer(["/home/chris/python/spacy/bin/python", str(spacy_path.resolve())])
+spaCyFix: Optional[ExternalTransformer] = None
+def load_spaCyFix():
+    global spaCyFix
+    python_spacy = settings.get("user.german_python_spacy")
+    spacy_path = here / ".external" / "spaCyFix.py"
+    spaCyFix = ExternalTransformer([python_spacy, str(spacy_path.resolve())])
 
 @ctx.capture("user.satz", rule='<user.satzglied>+')
 def satz(m) -> str:
@@ -106,9 +110,18 @@ def satz(m) -> str:
     result = ''.join(out).rstrip(' ')
     result = result.replace('␣', ' ')
 
-    # putting grammar-based correction at the end can result in explicit lowercase words to be uppercased
+    use_spacy = settings.get("user.german_use_spacy")
+    if use_spacy and not spaCyFix:
+        load_spaCyFix()
+
+    # putting grammar-based correction at the end can result in explicit lowercase
+    # words to be (wrongly) uppercased
     # print(f"Before spaCyFix: '{result}'")
-    return spaCyFix.transform(result)
+    if use_spacy and spaCyFix:
+        return spaCyFix.transform(result)
+    else:
+        return result
+
 
 
 @ctx.capture("user.weg", rule='weg+')

@@ -15,6 +15,24 @@ _german_mode/german.py_ contains a number of lists that might be of interest (na
 ## Improvements:
 I added various improvements for myself.
 
+### Improved composite detection
+The Conformer D model heavily favors individual words over composite nouns. This setup contains a separate pass that will try to combine individual words into composite nouns found in the dictionary where possible. This relies on precise pronunciation, e.g. "Kapitäns Mütze" will be combined into "Kapitänsmütze" while "Kapitän Mütze" will not.
+
+### Improved capitalization based on POS-tagging
+The Conformer D model does not deal with capitalization of nominalized verbs. This setup contains a wrapper-script for spaCy part-of-speech tagging that can be used to tag nominalized verbs and capitalize them accordingly. This requires the configuration of an external python interpreter that has the `spacy` package and the model `de_core_news_sm` installed.
+
+The python environment can be configured using the following commands:
+```
+pip install spacy
+python -m spacy download de_core_news_sm
+```
+Afterwards, define the following settings in `german.talon`
+```
+settings():
+    user.german_python_spacy = "<path to python interpreter with spaCy installed>"
+    user.german_use_spacy = 1
+```
+
 ### Text editing and navigation
 A handful of additional commands that make on-the-fly edits of text much more convenient.
 Especially:
