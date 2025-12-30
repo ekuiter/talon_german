@@ -1,6 +1,8 @@
-import os
+from pathlib import Path
+from typing import Set, List
 
 from talon import Context, actions
+from .external_transformer import ExternalTransformer
 
 ctx = Context()
 ctx.matches = """
@@ -8,23 +10,38 @@ mode: user.german
 language: de_DE
 """
 
-# dictionary for capitalization
-path = os.path.dirname(os.path.abspath(__file__))
-with open(path + "/dictionary/german.dic") as f:
-    list_of_words = f.read().split("\n")
+# dictionary for capitalization (set of lowercase words that should be capitalized)
+here = Path(__file__).resolve().parent
+german_dict = here / "dictionary" / "german.dic"
+capitalized_words = None
+with open(german_dict, "r", encoding="utf-8") as dict:
+    capitalized_words = {word.strip().lower() for word in dict if word[0].isupper()}
 
-dict_of_words = {}
-for word in list_of_words:
-    if word.lower() in dict_of_words:
-        # multiple entries, use lower:
-        dict_of_words[word.lower()] = word.lower()
-    else:
-        dict_of_words[word.lower()] = word
-# TODO: Read in ../knausj_talon/settings/capitalized_words_de_custom.txt to be
-# capitalized
-# Update: Is this really needed or can we just use words_to_replace_de.csv for
-# that?
-# => Yes, just create a command "always capitalize" that automates that entry
+
+def join_compounds(parts: List[str], compound_set: Set[str]) -> List[str]:
+    """Joins words in phrase into compound nouns"""
+    result: List[str] = []
+    i = 0
+    n = len(parts)
+    while i < n:
+        # join up to four words into a compound noun (words[i:i+4])
+        longest = parts[i]
+        skip = 1
+
+        # consider joining up to 4 words, but don't go past the end
+        max_words = min(4, n - i)
+        # j is the number of additional words (j+1 total words)
+        for j in range(1, max_words):
+            # TODO: the parts contain trailing spaces which makes this unnecessarily ugly
+            candidate = "".join(parts[i:i + j + 1]).lower().replace(" ", "")
+            if candidate in compound_set:
+                longest = candidate.capitalize() + ' '# restore stupid space after compound
+                skip = j + 1
+
+        result.append(longest)
+        i += skip 
+
+    return result
 
 _space_after = ".,!?:;)]}–“‘$£€"
 _no_space_before = ".,-!?:;)]}␣“‘’$£€"
@@ -55,8 +72,8 @@ def gk_wort(m) -> str:
     else:
         word = str(m)
         key = word.replace(" ", "")
-        if key in dict_of_words:
-            return dict_of_words[key] + " "
+        if key in capitalized_words:
+            return key.capitalize() + " "
         else:
             return word
 
@@ -69,22 +86,29 @@ def satzglied(m) -> str:
     else:
         return str(m)
 
+spacy_path = here / ".external" / "spaCyFix.py"
+spaCyFix = ExternalTransformer(["/home/chris/python/spacy/bin/python", str(spacy_path.resolve())])
 
 @ctx.capture("user.satz", rule='<user.satzglied>+')
 def satz(m) -> str:
     """sentence"""
-    result = [str(m[0])]
-    for i in range(1, len(m)):
-        if str(m[i])[0] in _no_space_before and result[i - 1][-1] == ' ':
-            result[i - 1] = result[i - 1][:-1]
-        result.append(str(m[i]))
-    result = ''.join(result)
+    parts = [str(x) for x in m]
+    # print(f"parts: {parts}")
 
-    if result[-1] == ' ':
-        result = result[:-1]
+    parts = join_compounds(parts, capitalized_words)
+    # print(f"after join_compounds: {parts}")
 
+    out = []
+    for i, p in enumerate(parts):
+        if i > 0 and p and p[0] in _no_space_before and out and out[-1].endswith(' '):
+            out[-1] = out[-1][:-1]
+        out.append(p)
+    result = ''.join(out).rstrip(' ')
     result = result.replace('␣', ' ')
-    return result
+
+    # putting grammar-based correction at the end can result in explicit lowercase words to be uppercased
+    # print(f"Before spaCyFix: '{result}'")
+    return spaCyFix.transform(result)
 
 
 @ctx.capture("user.weg", rule='weg+')
