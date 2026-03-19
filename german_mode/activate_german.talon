@@ -6,5 +6,5 @@ language: en_US
 
 ^(english | ego | pego)$: skip()
 
-^nimitz <phrase>$:
+^dings <phrase>$:
     user.recognize_momentary_german(phrase)
